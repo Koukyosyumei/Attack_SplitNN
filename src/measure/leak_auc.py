@@ -1,6 +1,7 @@
-from ..splitnn import SplitNN
 import torch
 from sklearn.metrics import roc_auc_score
+
+from ..splitnn import SplitNN
 
 
 class SplitNN_with_leak_auc(SplitNN):
@@ -46,5 +47,5 @@ class SplitNN_with_leak_auc(SplitNN):
                 m = metric(epoch_labels, epoch_outputs)
             leak_auc = roc_auc_score(epoch_labels, epoch_g_norm.view(-1, 1))
             print(
-                f"epoch {epoch+1}, loss {epoch_loss: .5}, metric {m}" +
+                f"epoch {epoch+1}, loss {epoch_loss: .5}, metric {m} " +
                 f"leak AUC {leak_auc: .5}")
