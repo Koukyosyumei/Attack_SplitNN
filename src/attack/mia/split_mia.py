@@ -45,6 +45,8 @@ class SplitMIA:
         print("start training attacker")
         self._fit_attacker_clf()
 
+        print("Done")
+
     def _fit_shadow_model(self, member_shadowloader, epochs, metric=None):
         for epoch in range(epochs):
             epoch_loss = 0
