@@ -1,1 +1,1 @@
-from ...splitnn import Client, Server, SplitNN
+from ...splitnn.model import Client, Server, SplitNN

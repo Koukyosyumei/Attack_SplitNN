@@ -1,4 +1,4 @@
-from ..splitnn.model import SplitNN
+from ..splitnn import SplitNN
 import torch
 from sklearn.metrics import roc_auc_score
 

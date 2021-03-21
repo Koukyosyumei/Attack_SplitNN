@@ -1,5 +1,5 @@
 import torch
-from ...src.splitnn.model import Server
+from ..splitnn import Server
 
 
 class Server_with_max_norm(Server):
