@@ -89,10 +89,10 @@ class SplitMIA:
                 labels = labels.to(self.device)
 
                 # execute client - feed forward network
-                intermediate = self.shadow_client(inputs)
+                intermediate = self.shadow_client.client_model(inputs)
                 remote_intermidiate = intermediate.detach().requires_grad_()
                 # execute server - feed forward network
-                output = self.server(remote_intermidiate)
+                output = self.server.server_model(remote_intermidiate)
 
                 train_shadow.append(output)
 
