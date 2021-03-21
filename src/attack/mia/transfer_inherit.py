@@ -17,19 +17,33 @@ class mia_transfer_inherit:
 
         self.attacker_dataset_x = None
         self.attacker_dataset_y = None
+        self.attacker_X_train = None
+        self.attacker_X_test = None
+        self.attacker_y_train = None
+        self.attacker_y_test = None
 
     def fit(self,
             member_shadowloader,
             nonmember_shadowloader,
             shadow_epochs,
             shadow_metric=None,
-            attack_dataset_split=0.3):
+            attack_dataset_split=0.3,
+            random_state=None):
 
+        # train shadow model
+        print("start training shadow model")
         self._fit_shadow_model(member_shadowloader,
                                shadow_epochs,
                                metric=shadow_metric)
+        # create dataset for attacker from shadow_model
+        print("start creating dataset for attacker")
         self._create_dataset_for_attacker(member_shadowloader,
-                                          nonmember_shadowloader)
+                                          nonmember_shadowloader,
+                                          test_size=attack_dataset_split,
+                                          random_state=random_state)
+        # train attacker classifier
+        print("start training attacker")
+        self._fit_attacker_clf()
 
     def _fit_shadow_model(self, member_shadowloader, epochs, metric=None):
         for epoch in range(epochs):
@@ -86,7 +100,9 @@ class mia_transfer_inherit:
         return outputs
 
     def _create_dataset_for_attacker(self, member_shadowloader,
-                                     nonmember_shadowloader):
+                                     nonmember_shadowloader,
+                                     test_size=0.3,
+                                     random_state=None):
         attacker_X_train_shadow = self._predict_shadow_model(
             member_shadowloader)
         attacker_X_test_shadow = self._predict_shadow_model(
@@ -108,17 +124,17 @@ class mia_transfer_inherit:
         self.attacker_y = np.concatenate(
             [attacker_y_train_shadow, attacker_y_test_shadow])
 
-    def _fit_attacker_clf(self, test_size=0.2, random_state=None):
-
-        attacker_X_train, attacker_X_test,\
-            attacker_y_train, attacker_y_test = train_test_split(
+        # split dataset
+        self.attacker_X_train, self.attacker_X_test,\
+            self.attacker_y_train, self.attacker_y_test = train_test_split(
                 self.attacker_X,
                 self.attacker_y,
                 test_size=test_size,
                 shuffle=True,
                 random_state=random_state)
 
-        self.attacker_clf.fit(attacker_X_train, attacker_y_train)
+    def _fit_attacker_clf(self):
+        self.attacker_clf.fit(self.attacker_X_train, self.attacker_y_train)
 
     def _predict_proba_attacker_clf(self, x):
         pred_proba = self.attacker_clf.predict_proba(x)
@@ -134,3 +150,6 @@ class mia_transfer_inherit:
 
         else:
             print(f"epoch {epoch+1}, loss {epoch_loss:.5}")
+
+    def save(self):
+        pass
