@@ -3,7 +3,7 @@ import torch
 from sklearn.model_selection import train_test_split
 
 
-class mia_transfer_inherit:
+class SplitMIA:
     def __init__(self,
                  shadow_client,
                  server,
