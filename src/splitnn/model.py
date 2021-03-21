@@ -74,10 +74,20 @@ class SplitNN:
             epoch_outputs = torch.cat(epoch_outputs)
             epoch_labels = torch.cat(epoch_labels)
 
-            if metric is not None:
-                m = metric(epoch_labels, epoch_outputs)
-
-            print(f"epoch {epoch+1}, loss {epoch_loss:.5}, metric {m}")
+            self._print_metric(epoch, epoch_loss,
+                               epoch_outputs, epoch_labels,
+                               metric=metric)
 
     def predict(self):
         pass
+
+    def _print_metric(self, epoch,
+                      epoch_loss,
+                      epoch_outputs, epoch_labels,
+                      metric=None):
+        if metric is not None:
+            m = metric(epoch_labels, epoch_outputs)
+            print(f"epoch {epoch+1}, loss {epoch_loss:.5}, metric {m}")
+
+        else:
+            print(f"epoch {epoch+1}, loss {epoch_loss:.5}")
