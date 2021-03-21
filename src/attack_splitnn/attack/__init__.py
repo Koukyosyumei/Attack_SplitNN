@@ -1,1 +1,1 @@
-from .mia.split_mia import SplitMIA
+from .mia import SplitMIA

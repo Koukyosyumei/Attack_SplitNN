@@ -1,1 +1,1 @@
-from .label_leak import label_leak_auc
+from .labelleak import label_leak_auc
