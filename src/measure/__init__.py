@@ -1,1 +1,1 @@
-from .leak_auc import SplitNN_with_leak_auc
+from .label_leak import label_leak_auc
