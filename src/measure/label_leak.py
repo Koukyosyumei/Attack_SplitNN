@@ -1,8 +1,6 @@
 import torch
 from sklearn.metrics import roc_auc_score
 
-from ..splitnn import SplitNN
-
 
 def label_leak_auc(splitnn, dataloader):
     epoch_labels = []
