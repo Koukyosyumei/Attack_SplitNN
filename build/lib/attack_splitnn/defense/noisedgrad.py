@@ -20,7 +20,8 @@ def max_norm(grad):
         pertubated_gard (torch.Tensor): noised gradient which is
                                         supposed to be sent to the client
 
-    Usage:
+    Examples:
+        # you have to create custom Server class
         class Server_with_max_norm(Server):
             def __init__(self, server_model,
                         server_optimizer,
