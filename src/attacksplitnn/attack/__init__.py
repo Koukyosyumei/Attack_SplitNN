@@ -1,2 +1,2 @@
 from .mia.splitmia import SplitMIA
-from .model_inversion import fsha, fshamnist
+from .modelinversion import fsha, fshamnist

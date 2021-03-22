@@ -1,1 +1,1 @@
-from .attack_splitnn import attack, defense, measure, splitnn, utils
+from .attacksplitnn import attack, defense, measure, splitnn, utils
