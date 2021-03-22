@@ -11,20 +11,11 @@ def read_requirements():
     return requirements
 
 
-packages = [
-    'attack_splitnn',
-    'attack_splitnn.attack',
-    'attack_splitnn.defense',
-    'attack_splitnn.measure',
-    'attack_splitnn.splitnn',
-    'attack_splitnn.utils'
-]
-
 console_scripts = [
 ]
 
 setup(
-    name='attack_splitnn',
+    name='attacksplitnn',
     version='0.0.0',
     description='Attacking SplitNN',
     author='Hideaki Takahashi',

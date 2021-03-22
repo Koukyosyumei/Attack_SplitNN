@@ -1,0 +1,8 @@
+README.md
+setup.py
+src/attacksplitnn.egg-info/PKG-INFO
+src/attacksplitnn.egg-info/SOURCES.txt
+src/attacksplitnn.egg-info/dependency_links.txt
+src/attacksplitnn.egg-info/entry_points.txt
+src/attacksplitnn.egg-info/requires.txt
+src/attacksplitnn.egg-info/top_level.txt
