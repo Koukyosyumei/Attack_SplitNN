@@ -97,13 +97,13 @@ class SplitNN:
         """class that expresses the whole architecture of SplitNN
 
         Args:
-            client (Client):
-            server (Server):
+            client (attack_splitnn.splitnn.Client):
+            server (attack_splitnn.splitnn.Server):
             device (str): device type (default 'cpu')
 
         Attributes:
-            client (Client):
-            server (Server):
+            client (attack_splitnn.splitnn.Client):
+            server (attack_splitnn.splitnn.Server):
             device (str): device type (default 'cpu')
 
         Examples:

@@ -7,7 +7,7 @@ def label_leak_auc(splitnn, dataloader):
        reference: https://arxiv.org/abs/2102.08504
 
     Args:
-        splitnn (SplitNN): target system
+        splitnn (attack_splitnn.splitnn.SplitNN): target system
         dataloader (torch dataloader):
 
     Returns:

@@ -9,14 +9,44 @@ class SplitMIA:
                  server,
                  attacker_clf,
                  device="cpu"):
+        """class to execure MIA against SplitNN
+           reference https://ieeexplore.ieee.org/document/9302683
+
+        Args:
+            shadow_client (attack_splitnn.splitnn.Client): shadow client that
+                                   the server prepares to mimic victim client
+            server (attack_splitnn.splitnn.Server): the server who want to
+                                   execute membership inference attack
+            attacker_clf (sklearn classfier): attacker's classifier for binary
+                               classification for membership inference attack
+            device (str): device type (default 'cpu')
+
+        Attributes:
+            shadow_client (attack_splitnn.splitnn.Client): shadow client that
+                                   the server prepares to mimic victim client
+            server (attack_splitnn.splitnn.Server): the server who want to
+                                   execute membership inference attack
+            attacker_clf (sklearn classfier): attacker's classifier for binary
+                               classification for membership inference attack
+            device (str): device type (default 'cpu')
+
+            attacker_X (np.array):
+            attacker_y (np.array):
+            attacker_X_train (np.array):
+            attacker_X_test (np.array):
+            attacker_y_train (np.array):
+            attacker_y_test (np.array):
+
+        Examples
+        """
 
         self.shadow_client = shadow_client
         self.server = server
         self.attacker_clf = attacker_clf
         self.device = device
 
-        self.attacker_dataset_x = None
-        self.attacker_dataset_y = None
+        self.attacker_X = None
+        self.attacker_y = None
         self.attacker_X_train = None
         self.attacker_X_test = None
         self.attacker_y_train = None
@@ -29,6 +59,16 @@ class SplitMIA:
             shadow_metric=None,
             attack_dataset_split=0.3,
             random_state=None):
+        """execure whole process of membership inference attack
+
+        Args:
+            member_shadowloader (torch dataloader):
+            nonmember_shadowloader (torch dataloader):
+            shadow_epochs (int):
+            shadow_metric (function):
+            attack_dataset_split (float):
+            random_state (int):
+        """
 
         # train shadow model
         print("start training shadow model")
@@ -48,6 +88,13 @@ class SplitMIA:
         print("Done")
 
     def _fit_shadow_model(self, member_shadowloader, epochs, metric=None):
+        """train shadow model
+
+        Args:
+            member_shadowloader (torch dataloader):
+            epochs (int):
+            metric (function):
+        """
         for epoch in range(epochs):
             epoch_loss = 0
             epoch_labels = []
@@ -83,6 +130,14 @@ class SplitMIA:
                                metric=metric)
 
     def _predict_shadow_model(self, dataloader):
+        """predict by shadow_model
+
+        Args:
+            dataloader
+
+        Returns:
+            outputs
+        """
         with torch.no_grad():
             train_shadow = []
             for i, data in enumerate(dataloader, 0):
@@ -105,6 +160,14 @@ class SplitMIA:
                                      nonmember_shadowloader,
                                      test_size=0.3,
                                      random_state=None):
+        """create membership dataset for attacker
+
+        Args:
+            member_shadowloader
+            nonmember_shadowloader
+            test_size
+            random_state
+        """
         attacker_X_train_shadow = self._predict_shadow_model(
             member_shadowloader)
         attacker_X_test_shadow = self._predict_shadow_model(
@@ -136,6 +199,8 @@ class SplitMIA:
                 random_state=random_state)
 
     def _fit_attacker_clf(self):
+        """train attacker's classifier
+        """
         self.attacker_clf.fit(self.attacker_X_train, self.attacker_y_train)
 
     def _predict_proba_attacker_clf(self, x):
