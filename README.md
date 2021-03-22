@@ -1,6 +1,10 @@
 # Attacking SplitNN
 
+Attacking_SplitNN is a Python library, and it allows you to easily experiment with various combinations of attack and defense algorithms against SplitNN within PyTorch and scikit-learn.
+
 ## Install
+
+        pip install git+https://github.com/Koukyosyumei/Attack_SplitNN
 
 ## SplitNN
 
