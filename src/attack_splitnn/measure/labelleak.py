@@ -3,6 +3,16 @@ from sklearn.metrics import roc_auc_score
 
 
 def label_leak_auc(splitnn, dataloader):
+    """culculate leak_auc on the given SplitNN model
+       reference: https://arxiv.org/abs/2102.08504
+
+    Args:
+        splitnn (SplitNN): target system
+        dataloader (torch dataloader):
+
+    Returns:
+        score: culculated leak auc
+    """
     epoch_labels = []
     epoch_g_norm = []
     for i, data in enumerate(dataloader, 0):

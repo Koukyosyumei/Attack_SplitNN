@@ -14,4 +14,5 @@ src/attack_splitnn/measure/labelleak.py
 src/attack_splitnn/splitnn/__init__.py
 src/attack_splitnn/splitnn/model.py
 src/attack_splitnn/utils/__init__.py
+src/attack_splitnn/utils/torchmodule.py
 src/attack_splitnn/utils/utils.py
