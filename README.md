@@ -1,5 +1,7 @@
 # Attacking SplitNN
 
+## Install
+
 ## SplitNN
 
 You can easily create two-SplitNN with this package as follows.\
@@ -31,13 +33,27 @@ Label Leakage (Oscar et al.) is one of the weaknesses in SplitNN, and it means t
 [notebook](examples/Label_Leakage.ipynb)\
 [paper](https://arxiv.org/abs/2102.08504)
 
-## Membership Inference
+## Membership Inference Attack
+
+It is proved that the attacker can determine whether the victim used a record to train the target model, and this attack is called Membership Inference Attack (MIA). In SplitNN, one of the possible situations is that the malicious server executes a membership inference attack against the client.
 
 [notebook](examples/Membershio_Inference_Attack.ipynb)\
-[paper]()
+[paper](https://ieeexplore.ieee.org/document/9302683)
 
 ## Model Inversion
+
+The general purpose of Model Inversion is to reconstruct the training data from models. FSHA is a kind of Model Inversion Attack for SplitNN, and it allows the server to rebuild the training data that the client wants to hide. Also, the malicious client uses this method to fetch other clients' training data.
+
+[notebook](examples/FSHA_Model_Inversion_FSHA.ipynb)
+[paper](https://arxiv.org/abs/2012.02670)
+
+*note*\
+We currently don't support the same interface (Client, Server, SplitNN, etc.) like other attacks for this method.
 
 ### Server side
 
 ### Client side
+
+## Poisoning Attack
+
+## Evasion Attack
