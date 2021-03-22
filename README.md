@@ -44,7 +44,7 @@ It is proved that the attacker can determine whether the victim used a record to
 
 The general purpose of Model Inversion is to reconstruct the training data from models. FSHA is a kind of Model Inversion Attack for SplitNN, and it allows the server to rebuild the training data that the client wants to hide. Also, the malicious client uses this method to fetch other clients' training data.
 
-[notebook](examples/FSHA_Model_Inversion_FSHA.ipynb)
+[notebook](examples/FSHA_Model_Inversion_FSHA.ipynb)\
 [paper](https://arxiv.org/abs/2012.02670)
 
 *note*\
