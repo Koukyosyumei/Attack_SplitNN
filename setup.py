@@ -1,6 +1,6 @@
 import os
 
-from setuptools import setup
+from setuptools import find_packages, setup
 
 
 def read_requirements():
@@ -33,6 +33,6 @@ setup(
     install_requires=read_requirements(),
     url="https://github.com/Koukyosyumei/Attack_SplitNN",
     package_dir={"": "src"},
-    packages=packages,
+    packages=find_packages(where="src"),
     entry_points={'console_scripts': console_scripts},
 )
