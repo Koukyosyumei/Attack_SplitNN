@@ -6,7 +6,8 @@ Attacking_SplitNN is a Python library, and it allows you to easily experiment wi
 
         pip install git+https://github.com/Koukyosyumei/Attack_SplitNN
 
-## SplitNN
+##
+ SplitNN
 
 You can easily create two-SplitNN with this package as follows.\
 The client only has input data, and the server has only labels.
@@ -61,3 +62,7 @@ We currently don't support the same interface (Client, Server, SplitNN, etc.) li
 ## Poisoning Attack
 
 ## Evasion Attack
+
+## License
+
+This software is released under the MIT License, see LICENSE.txt.
