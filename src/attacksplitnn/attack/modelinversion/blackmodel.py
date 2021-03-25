@@ -2,7 +2,7 @@ import torch
 
 
 class Black_Box_Model_Inversion:
-    def __init__(self, attacker_model, attacker_optimizer):
+    def __init__(self, splitnn, attacker_model, attacker_optimizer):
         """class that implement black box model inversion
 
         Args:
@@ -13,12 +13,12 @@ class Black_Box_Model_Inversion:
             attacker_model (torch model):
             attacker_optimizer (torch optimizer):
         """
-
+        self.splitnn = splitnn
         self.attacker_model = attacker_model
         self.attacker_optimizer = attacker_optimizer
 
-    def fit(self, splitnn, dataloader_for_attacker, epoch):
-        client_side_model = splitnn.client.client_model
+    def fit(self, dataloader_for_attacker, epoch):
+        client_side_model = self.splitnn.client.client_model
 
         for i in range(epoch):
             for data, _ in dataloader_for_attacker:
@@ -35,8 +35,8 @@ class Black_Box_Model_Inversion:
 
             print(f"epoch {i}: reconstruction_loss {loss.item()}")
 
-    def attack(self, splitnn, dataloader_target):
-        client_side_model = splitnn.client.client_model
+    def attack(self, dataloader_target):
+        client_side_model = self.splitnn.client.client_model
         attack_results = []
 
         for data, _ in dataloader_target:
