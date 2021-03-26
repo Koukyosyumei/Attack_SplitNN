@@ -52,13 +52,13 @@ class TransferInherit:
         self.attacker_y_train = None
         self.attacker_y_test = None
 
-    def fit(self,
-            member_shadowloader,
-            nonmember_shadowloader,
-            shadow_epochs,
-            shadow_metric=None,
-            attack_dataset_split=0.3,
-            random_state=None):
+    def attack(self,
+               member_shadowloader,
+               nonmember_shadowloader,
+               shadow_epochs,
+               shadow_metric=None,
+               attack_dataset_split=0.3,
+               random_state=None):
         """execure whole process of membership inference attack
 
         Args:
