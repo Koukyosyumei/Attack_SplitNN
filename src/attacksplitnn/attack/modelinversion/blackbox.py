@@ -6,10 +6,12 @@ class Black_Box_Model_Inversion:
         """class that implement black box model inversion
 
         Args:
+            splitnn (SplitNN):
             attacker_model (torch model):
             attacker_optimizer (torch optimizer):
 
         Attributes:
+            splitnn (SplitNN):
             attacker_model (torch model):
             attacker_optimizer (torch optimizer):
         """

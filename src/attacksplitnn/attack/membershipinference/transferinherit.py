@@ -20,6 +20,7 @@ class TransferInherit:
                                    the server prepares to mimic victim client
             server (attack_splitnn.splitnn.Server): the server who want to
                                    execute membership inference attack
+            shadow_client_optimizer (torch optimizer):
             attacker_clf (sklearn classfier): attacker's classifier for binary
                                classification for membership inference attack
             device (str): device type (default 'cpu')
@@ -29,6 +30,7 @@ class TransferInherit:
                                    the server prepares to mimic victim client
             server (attack_splitnn.splitnn.Server): the server who want to
                                    execute membership inference attack
+            shadow_client_optimizer (torch optimizer):
             attacker_clf (sklearn classfier): attacker's classifier for binary
                                classification for membership inference attack
             device (str): device type (default 'cpu')
@@ -75,6 +77,7 @@ class TransferInherit:
             member_shadowloader (torch dataloader):
             nonmember_shadowloader (torch dataloader):
             shadow_epochs (int):
+            shadow_criterion (function)
             shadow_metric (function):
             attack_dataset_split (float):
             random_state (int):

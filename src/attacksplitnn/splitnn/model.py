@@ -8,13 +8,12 @@ class Client(torch.nn.Module):
 
         Args:
             client_model (torch model): client-side model
-            client_optimizer (torch optimizer): optimizer for client-side model
 
         Attributes:
             client_model (torch model): cliet-side model
-            client_optimizer (torch optimizer): optimizer for client-side model
             client_side_intermidiate (torch.Tensor): output of
                                                      client-side model
+            grad_from_server
         """
 
         self.client_model = client_model
@@ -44,7 +43,7 @@ class Client(torch.nn.Module):
         """client-side back propagation
 
         Args:
-            grad_to_client
+            grad_from_server
         """
         self.grad_from_server = grad_from_server
         self.client_side_intermidiate.backward(grad_from_server)
@@ -63,12 +62,11 @@ class Server(torch.nn.Module):
 
         Args:
             server_model (torch model): server-side model
-            server_optimizer (torch optimizer): optimizer for server-side model
-            criterion (function): loss function for training
 
         Attributes:
             server_model (torch model): server-side model
-            server_optimizer (torch optimizer): optimizer for server-side model
+            intermidiate_to_server:
+            grad_to_client
         """
         self.server_model = server_model
 
@@ -111,30 +109,14 @@ class SplitNN(torch.nn.Module):
         Args:
             client (attack_splitnn.splitnn.Client):
             server (attack_splitnn.splitnn.Server):
-            device (str): device type (default 'cpu')
+            clietn_optimizer
+            server_optimizer
 
         Attributes:
             client (attack_splitnn.splitnn.Client):
             server (attack_splitnn.splitnn.Server):
-            device (str): device type (default 'cpu')
-
-        Examples:
-            model_1 = FirstNet()
-            model_1 = model_1.to(device)
-
-            model_2 = SecondNet()
-            model_2 = model_2.to(device)
-
-            opt_1 = optim.Adam(model_1.parameters(), lr=1e-3)
-            opt_2 = optim.Adam(model_2.parameters(), lr=1e-3)
-
-            criterion = nn.BCELoss()
-
-            client = Client(model_1, opt_1)
-            server = Server(model_2, opt_2, criterion)
-
-            sn = SplitNN(client, server, device=device)
-            sn.fit(train_loader, 3, metric=torch_auc)
+            clietn_optimizer
+            server_optimizer
         """
         self.client = client
         self.server = server
