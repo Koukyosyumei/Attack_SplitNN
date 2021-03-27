@@ -1,9 +1,9 @@
 import torch
 
 
-class Client:
-    def __init__(self, client_model,
-                 client_optimizer):
+class Client(torch.nn.Module):
+    def __init__(self, client_model):
+        super().__init__()
         """class that expresses the Client on SplitNN
 
         Args:
@@ -18,10 +18,9 @@ class Client:
         """
 
         self.client_model = client_model
-        self.client_optimizer = client_optimizer
         self.client_side_intermidiate = None
 
-    def _fit_client_forward(self, inputs):
+    def forward(self, inputs):
         """client-side feed forward network
 
         Args:
@@ -40,7 +39,7 @@ class Client:
 
         return intermidiate_to_server
 
-    def _fit_client_backpropagation(self, grad_to_client):
+    def backward(self, grad_to_client):
         """client-side back propagation
 
         Args:
@@ -48,11 +47,16 @@ class Client:
         """
         self.client_side_intermidiate.backward(grad_to_client)
 
+    def train(self):
+        self.client_model.train()
 
-class Server:
-    def __init__(self, server_model,
-                 server_optimizer,
-                 criterion):
+    def eval(self):
+        self.client_model.eval()
+
+
+class Server(torch.nn.Module):
+    def __init__(self, server_model):
+        super().__init__()
         """class that expresses the Server on SplitNN
 
         Args:
@@ -63,37 +67,42 @@ class Server:
         Attributes:
             server_model (torch model): server-side model
             server_optimizer (torch optimizer): optimizer for server-side model
-            criterion (function): loss function for training
         """
         self.server_model = server_model
-        self.server_optimizer = server_optimizer
-        self.criterion = criterion
 
-    def _fit_server(self, intermidiate_to_server, labels):
+        self.intermidiate_to_server = None
+
+    def forward(self, intermidiate_to_server):
         """server-side training
 
         Args:
             intermidiate_to_server (torch.Tensor): the output of client-side
                                                    model
-            labels (torch.Tensor): ground-truth label
 
         Returns:
             outputs (torch.Tensor): outputs of server-side model
-            loss:
-            grad_to_client (torch.Tensor): the gradient of loss with respect to
-                                           the input of the server-side model
-                                        (corresponds to intermidiate_to_server)
         """
+        self.intermidiate_to_server = intermidiate_to_server
         outputs = self.server_model(intermidiate_to_server)
-        loss = self.criterion(outputs, labels)
-        loss.backward()
 
-        grad_to_client = intermidiate_to_server.grad.clone()
-        return outputs, loss, grad_to_client
+        return outputs
+
+    def backward(self):
+        grad_to_client = self.intermidiate_to_server.grad.clone()
+        return grad_to_client
+
+    def train(self):
+        self.server_model.train()
+
+    def eval(self):
+        self.server_model.eval()
 
 
-class SplitNN:
-    def __init__(self, client, server, device="cpu"):
+class SplitNN(torch.nn.Module):
+    def __init__(self, client, server,
+                 client_optimizer, server_optimizer,
+                 ):
+        super().__init__()
         """class that expresses the whole architecture of SplitNN
 
         Args:
@@ -126,71 +135,35 @@ class SplitNN:
         """
         self.client = client
         self.server = server
-        self.device = device
+        self.client_optimizer = client_optimizer
+        self.server_optimizer = server_optimizer
 
-    def fit(self, dataloader, epochs, metric=None):
-        """train SplitNN
+    def forward(self, inputs):
+        # execute client - feed forward network
+        intermidiate_to_server = self.client.forward(inputs)
+        # execute server - feed forward netwoek
+        outputs = self.server.forward(intermidiate_to_server)
 
-        Args:
-            dataloader (torch Dataloaser)
-            epochs (int):
-            metric (function):
-        """
-        for epoch in range(epochs):
-            epoch_loss = 0
-            epoch_labels = []
-            epoch_outputs = []
-            for i, data in enumerate(dataloader, 0):
+        return outputs
 
-                self.client.client_optimizer.zero_grad()
-                self.server.server_optimizer.zero_grad()
+    def backward(self):
+        # execute server - back propagation
+        grad_to_client = self.server.backward()
+        # execute client - back propagation
+        self.client.backward(grad_to_client)
 
-                inputs, labels = data
-                inputs = inputs.to(self.device)
-                labels = labels.to(self.device)
+    def zero_grads(self):
+        self.client_optimizer.zero_grad()
+        self.server_optimizer.zero_grad()
 
-                # execute client - feed forward network
-                intermidiate_to_server = self.client._fit_client_forward(
-                    inputs)
-                # execute server side actions
-                outputs, loss, grad_to_client = self.server._fit_server(
-                    intermidiate_to_server, labels)
-                # execute client - back propagation
-                self.client._fit_client_backpropagation(grad_to_client)
+    def step(self):
+        self.client_optimizer.step()
+        self.server_optimizer.step()
 
-                self.client.client_optimizer.step()
-                self.server.server_optimizer.step()
+    def train(self):
+        self.client.train()
+        self.server.train()
 
-                epoch_loss += loss / len(dataloader.dataset)
-                epoch_outputs.append(outputs)
-                epoch_labels.append(labels)
-
-            epoch_outputs = torch.cat(epoch_outputs)
-            epoch_labels = torch.cat(epoch_labels)
-
-            self._print_metric(epoch, epoch_loss,
-                               epoch_outputs, epoch_labels,
-                               metric=metric)
-
-    def predict(self):
-        pass
-
-    def _print_metric(self, epoch,
-                      epoch_loss,
-                      epoch_outputs, epoch_labels,
-                      metric=None):
-        """culculate the given metric and print the log of each epoch
-
-        Args:
-            epoch (int):
-            epoch_loss (float):
-            epoch_outpus (torch.Tensor)
-            epoch_labels (torch.Tensor)
-            metric (function)
-        """
-        if metric is not None:
-            m = metric(epoch_labels, epoch_outputs)
-            print(f"epoch {epoch+1}, loss {epoch_loss:.5}, metric {m}")
-
-        else:
-            print(f"epoch {epoch+1}, loss {epoch_loss:.5}")
+    def eval(self):
+        self.client.eval()
+        self.server.eval()
