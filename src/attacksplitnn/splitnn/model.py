@@ -143,9 +143,9 @@ class SplitNN(torch.nn.Module):
 
     def forward(self, inputs):
         # execute client - feed forward network
-        intermidiate_to_server = self.client.forward(inputs)
+        intermidiate_to_server = self.client(inputs)
         # execute server - feed forward netwoek
-        outputs = self.server.forward(intermidiate_to_server)
+        outputs = self.server(intermidiate_to_server)
 
         return outputs
 
