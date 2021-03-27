@@ -6,7 +6,7 @@ class NormAttack:
     def __init__(self, splitnn):
         self.splitnn = splitnn
 
-    def attack(self, dataloader):
+    def attack(self, dataloader, criterion, device):
         """culculate leak_auc on the given SplitNN model
         reference: https://arxiv.org/abs/2102.08504
 
@@ -22,15 +22,16 @@ class NormAttack:
         for i, data in enumerate(dataloader, 0):
 
             inputs, labels = data
-            inputs = inputs.to(self.splitnn.device)
-            labels = labels.to(self.splitnn.device)
+            inputs = inputs.to(device)
+            labels = labels.to(device)
 
-            intermidiate_to_server = self.splitnn.client._fit_client_forward(
-                inputs)
-            _, _, grad_to_client = self.splitnn.server._fit_server(
-                intermidiate_to_server, labels)
+            outputs = self.splitnn(inputs)
+            loss = criterion(outputs, labels)
+            loss.backward()
+            self.splitnn.backward()
 
-            g_norm = grad_to_client.pow(2).sum(dim=1).sqrt()
+            grad_from_server = self.splitnn.client.grad_from_server
+            g_norm = grad_from_server.pow(2).sum(dim=1).sqrt()
             epoch_labels.append(labels)
             epoch_g_norm.append(g_norm)
 
