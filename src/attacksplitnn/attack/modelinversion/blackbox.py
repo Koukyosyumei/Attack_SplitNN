@@ -18,13 +18,12 @@ class Black_Box_Model_Inversion:
         self.attacker_optimizer = attacker_optimizer
 
     def attack(self, dataloader_for_attacker, epoch):
-        client_side_model = self.splitnn.client.client_model
 
         for i in range(epoch):
             for data, _ in dataloader_for_attacker:
                 self.attacker_optimizer.zero_grad()
 
-                target_outputs = client_side_model(data)
+                target_outputs = self.splitnn.client(data)
 
                 attack_outputs = self.attacker_model(target_outputs)
 
@@ -36,11 +35,10 @@ class Black_Box_Model_Inversion:
             print(f"epoch {i}: reconstruction_loss {loss.item()}")
 
     def predict(self, dataloader_target):
-        client_side_model = self.splitnn.client.client_model
         attack_results = []
 
         for data, _ in dataloader_target:
-            target_outputs = client_side_model(data)
+            target_outputs = self.splitnn.client(data)
             recreated_data = self.attacker_model(target_outputs)
             attack_results.append(recreated_data)
 
