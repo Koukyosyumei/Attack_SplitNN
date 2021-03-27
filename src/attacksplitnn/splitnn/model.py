@@ -19,6 +19,7 @@ class Client(torch.nn.Module):
 
         self.client_model = client_model
         self.client_side_intermidiate = None
+        self.grad_from_server = None
 
     def forward(self, inputs):
         """client-side feed forward network
@@ -39,13 +40,14 @@ class Client(torch.nn.Module):
 
         return intermidiate_to_server
 
-    def backward(self, grad_to_client):
+    def backward(self, grad_from_server):
         """client-side back propagation
 
         Args:
             grad_to_client
         """
-        self.client_side_intermidiate.backward(grad_to_client)
+        self.grad_from_server = grad_from_server
+        self.client_side_intermidiate.backward(grad_from_server)
 
     def train(self):
         self.client_model.train()
@@ -71,6 +73,7 @@ class Server(torch.nn.Module):
         self.server_model = server_model
 
         self.intermidiate_to_server = None
+        self.grad_to_client = None
 
     def forward(self, intermidiate_to_server):
         """server-side training
@@ -88,8 +91,8 @@ class Server(torch.nn.Module):
         return outputs
 
     def backward(self):
-        grad_to_client = self.intermidiate_to_server.grad.clone()
-        return grad_to_client
+        self.grad_to_client = self.intermidiate_to_server.grad.clone()
+        return self.grad_to_client
 
     def train(self):
         self.server_model.train()
