@@ -2,11 +2,14 @@ import numpy as np
 import torch
 from sklearn.model_selection import train_test_split
 
+from ...splitnn.model import SplitNN
+
 
 class TransferInherit:
     def __init__(self,
                  shadow_client,
                  server,
+                 shadow_client_optimizer,
                  attacker_clf,
                  device="cpu"):
         """class to execure MIA against SplitNN
@@ -41,9 +44,15 @@ class TransferInherit:
         """
 
         self.shadow_client = shadow_client
+        self.shadow_client_optimizer = shadow_client_optimizer
         self.server = server
         self.attacker_clf = attacker_clf
         self.device = device
+
+        self.shadow_splitnn = SplitNN(self.shadow_client,
+                                      self.server,
+                                      self.shadow_client_optimizer,
+                                      None)
 
         self.attacker_X = None
         self.attacker_y = None
@@ -56,6 +65,7 @@ class TransferInherit:
                member_shadowloader,
                nonmember_shadowloader,
                shadow_epochs,
+               shadow_criterion,
                shadow_metric=None,
                attack_dataset_split=0.3,
                random_state=None):
@@ -73,6 +83,7 @@ class TransferInherit:
         # train shadow model
         print("start training shadow model")
         self._fit_shadow_model(member_shadowloader,
+                               shadow_criterion,
                                shadow_epochs,
                                metric=shadow_metric)
         # create dataset for attacker from shadow_model
@@ -87,7 +98,9 @@ class TransferInherit:
 
         print("Done")
 
-    def _fit_shadow_model(self, member_shadowloader, epochs, metric=None):
+    def _fit_shadow_model(self, member_shadowloader,
+                          criterion,
+                          epochs, metric=None):
         """train shadow model
 
         Args:
@@ -101,26 +114,21 @@ class TransferInherit:
             epoch_outputs = []
             for i, data in enumerate(member_shadowloader, 0):
 
-                self.shadow_client.client_optimizer.zero_grad()
+                self.shadow_splitnn.client_optimizer.zero_grad()
 
                 inputs, labels = data
                 inputs = inputs.to(self.device)
                 labels = labels.to(self.device)
 
-                # execute client - feed forward network
-                intermidiate_to_server =\
-                    self.shadow_client._fit_client_forward(inputs)
-                # execute server side actions
-                outputs, loss, grad_to_client = self.server._fit_server(
-                    intermidiate_to_server, labels)
-                # execute client - back propagation
-                self.shadow_client._fit_client_backpropagation(grad_to_client)
-
-                self.shadow_client.client_optimizer.step()
-
+                outputs = self.shadow_splitnn(inputs)
+                loss = criterion(outputs, labels)
+                loss.backward()
                 epoch_loss += loss / len(member_shadowloader.dataset)
                 epoch_outputs.append(outputs)
                 epoch_labels.append(labels)
+
+                self.shadow_splitnn.backward()
+                self.shadow_splitnn.client_optimizer.step()
 
             epoch_outputs = torch.cat(epoch_outputs)
             epoch_labels = torch.cat(epoch_labels)
@@ -145,12 +153,7 @@ class TransferInherit:
                 inputs = inputs.to(self.device)
                 labels = labels.to(self.device)
 
-                # execute client - feed forward network
-                intermediate = self.shadow_client.client_model(inputs)
-                remote_intermidiate = intermediate.detach().requires_grad_()
-                # execute server - feed forward network
-                output = self.server.server_model(remote_intermidiate)
-
+                output = self.shadow_splitnn(inputs)
                 train_shadow.append(output)
 
         outputs = torch.cat(train_shadow)
