@@ -43,7 +43,7 @@ class Client(torch.nn.Module):
         """client-side back propagation
 
         Args:
-            grad_from_server
+            grad_from_server: gradient which the server send to the client
         """
         self.grad_from_server = grad_from_server
         self.client_side_intermidiate.backward(grad_from_server)
@@ -123,11 +123,13 @@ class SplitNN(torch.nn.Module):
         self.client_optimizer = client_optimizer
         self.server_optimizer = server_optimizer
 
+        self.intermidiate_to_server = None
+
     def forward(self, inputs):
         # execute client - feed forward network
-        intermidiate_to_server = self.client(inputs)
+        self.intermidiate_to_server = self.client(inputs)
         # execute server - feed forward netwoek
-        outputs = self.server(intermidiate_to_server)
+        outputs = self.server(self.intermidiate_to_server)
 
         return outputs
 
