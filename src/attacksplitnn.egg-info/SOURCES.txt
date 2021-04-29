@@ -16,8 +16,13 @@ src/attacksplitnn/attack/modelinversion/__init__.py
 src/attacksplitnn/attack/modelinversion/blackbox.py
 src/attacksplitnn/attack/modelinversion/fsha.py
 src/attacksplitnn/attack/modelinversion/fshamnist.py
+src/attacksplitnn/attack/poisoning/__init__.py
+src/attacksplitnn/attack/property_inference/__init__.py
 src/attacksplitnn/defense/__init__.py
 src/attacksplitnn/defense/noisedgrad.py
+src/attacksplitnn/defense/nopeek.py
+src/attacksplitnn/defense/nopeek_re.py
+src/attacksplitnn/defense/shredder.py
 src/attacksplitnn/splitnn/__init__.py
 src/attacksplitnn/splitnn/model.py
 src/attacksplitnn/utils/__init__.py
