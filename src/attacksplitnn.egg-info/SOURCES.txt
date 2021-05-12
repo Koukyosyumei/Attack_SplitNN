@@ -8,6 +8,7 @@ src/attacksplitnn.egg-info/entry_points.txt
 src/attacksplitnn.egg-info/requires.txt
 src/attacksplitnn.egg-info/top_level.txt
 src/attacksplitnn/attack/__init__.py
+src/attacksplitnn/attack/attacker.py
 src/attacksplitnn/attack/labelleakage/__init__.py
 src/attacksplitnn/attack/labelleakage/normattack.py
 src/attacksplitnn/attack/membershipinference/__init__.py

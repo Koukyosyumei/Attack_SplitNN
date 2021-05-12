@@ -1,18 +1,27 @@
 import torch
 from sklearn.metrics import roc_auc_score
 
+from ..attacker import AbstractAttacker
 
-class NormAttack:
+
+class NormAttack(AbstractAttacker):
     def __init__(self, splitnn):
+        """Class that implement normattack
+
+        Args:
+            splitnn (attack_splitnn.splitnn.SplitNN): target splotnn model
+        """
+        super().__init__(splitnn)
         self.splitnn = splitnn
 
     def attack(self, dataloader, criterion, device):
-        """culculate leak_auc on the given SplitNN model
-        reference: https://arxiv.org/abs/2102.08504
+        """Culculate leak_auc on the given SplitNN model
+           reference: https://arxiv.org/abs/2102.08504
 
         Args:
-            splitnn (attack_splitnn.splitnn.SplitNN): target system
-            dataloader (torch dataloader):
+            dataloader (torch dataloader): dataloader for evaluation
+            criterion: loss function for training
+            device: cpu or GPU
 
         Returns:
             score: culculated leak auc
