@@ -39,7 +39,7 @@ class Client(torch.nn.Module):
 
         return intermidiate_to_server
 
-    def backward(self, grad_from_server):
+    def client_backward(self, grad_from_server):
         """client-side back propagation
 
         Args:
@@ -88,7 +88,7 @@ class Server(torch.nn.Module):
 
         return outputs
 
-    def backward(self):
+    def server_backward(self):
         self.grad_to_client = self.intermidiate_to_server.grad.clone()
         return self.grad_to_client
 
@@ -135,9 +135,9 @@ class SplitNN(torch.nn.Module):
 
     def backward(self):
         # execute server - back propagation
-        grad_to_client = self.server.backward()
+        grad_to_client = self.server.server_backward()
         # execute client - back propagation
-        self.client.backward(grad_to_client)
+        self.client.client_backward(grad_to_client)
 
     def zero_grads(self):
         self.client_optimizer.zero_grad()
