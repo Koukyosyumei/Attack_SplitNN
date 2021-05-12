@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 
 
-class Attacker(metaclass=ABCMeta):
+class AbstractAttacker(metaclass=ABCMeta):
     def __init__(self, splitnn):
         """attacker against SplitNN
 
@@ -10,7 +10,6 @@ class Attacker(metaclass=ABCMeta):
         """
         self.splitnn = splitnn
 
-    @abstractmethod
     def fit(self):
         pass
 

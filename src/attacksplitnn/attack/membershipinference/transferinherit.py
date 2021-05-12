@@ -3,23 +3,23 @@ import torch
 from sklearn.model_selection import train_test_split
 
 from ...splitnn.model import SplitNN
+from ..attacker import AbstractAttacker
 
 
-class TransferInherit:
+class TransferInherit(AbstractAttacker):
     def __init__(self,
+                 splitnn,
                  shadow_client,
-                 server,
                  shadow_client_optimizer,
                  attacker_clf,
                  device="cpu"):
-        """class to execure MIA against SplitNN
+        """class to execure membership inference attack against SplitNN
            reference https://ieeexplore.ieee.org/document/9302683
 
         Args:
+            splitnn: target splitnn model
             shadow_client (attack_splitnn.splitnn.Client): shadow client that
                                    the server prepares to mimic victim client
-            server (attack_splitnn.splitnn.Server): the server who want to
-                                   execute membership inference attack
             shadow_client_optimizer (torch optimizer):
             attacker_clf (sklearn classfier): attacker's classifier for binary
                                classification for membership inference attack
@@ -44,10 +44,10 @@ class TransferInherit:
 
         Examples
         """
-
+        super().__init__(splitnn)
         self.shadow_client = shadow_client
         self.shadow_client_optimizer = shadow_client_optimizer
-        self.server = server
+        self.server = splitnn.server
         self.attacker_clf = attacker_clf
         self.device = device
 
@@ -63,14 +63,14 @@ class TransferInherit:
         self.attacker_y_train = None
         self.attacker_y_test = None
 
-    def attack(self,
-               member_shadowloader,
-               nonmember_shadowloader,
-               shadow_epochs,
-               shadow_criterion,
-               shadow_metric=None,
-               attack_dataset_split=0.3,
-               random_state=None):
+    def fit(self,
+            member_shadowloader,
+            nonmember_shadowloader,
+            shadow_epochs,
+            shadow_criterion,
+            shadow_metric=None,
+            attack_dataset_split=0.3,
+            random_state=None):
         """execure whole process of membership inference attack
 
         Args:
@@ -100,6 +100,10 @@ class TransferInherit:
         self._fit_attacker_clf()
 
         print("Done")
+
+    def attack(self, x):
+        pred_proba = self.attacker_clf.predict_proba(x)
+        return pred_proba
 
     def _fit_shadow_model(self, member_shadowloader,
                           criterion,
@@ -208,10 +212,6 @@ class TransferInherit:
         """train attacker's classifier
         """
         self.attacker_clf.fit(self.attacker_X_train, self.attacker_y_train)
-
-    def _predict_proba_attacker_clf(self, x):
-        pred_proba = self.attacker_clf.predict_proba(x)
-        return pred_proba
 
     def _print_metric(self, epoch,
                       epoch_loss,
