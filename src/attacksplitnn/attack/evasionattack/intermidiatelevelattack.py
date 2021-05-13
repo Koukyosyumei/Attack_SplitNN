@@ -6,41 +6,10 @@ from ..attacker import AbstractAttacker
 # https://github.com/CUAI/Intermediate-Level-Attack/blob/master/attacks.py
 
 
-class Proj_Loss(torch.nn.Module):
-    def __init__(self):
-        super(Proj_Loss, self).__init__()
-
-    def forward(self, old_attack_mid, new_mid, original_mid, coeff):
-        x = (old_attack_mid - original_mid).view(1, -1)
-        y = (new_mid - original_mid).view(1, -1)
-        x_norm = x / x.norm()
-
-        proj_loss = torch.mm(y, x_norm.transpose(0, 1)) / x.norm()
-        return proj_loss
-
-
-class Mid_layer_target_Loss(torch.nn.Module):
-    def __init__(self):
-        super(Mid_layer_target_Loss, self).__init__()
-
-    def forward(self, old_attack_mid, new_mid, original_mid, coeff):
-        x = (old_attack_mid - original_mid).view(1, -1)
-        y = (new_mid - original_mid).view(1, -1)
-
-        x_norm = x / x.norm()
-        if (y == 0).all():
-            y_norm = y
-        else:
-            y_norm = y / y.norm()
-        angle_loss = torch.mm(x_norm, y_norm.transpose(0, 1))
-        magnitude_gain = y.norm() / x.norm()
-        return angle_loss + magnitude_gain * coeff
-
-
 class IntermidiateLevelAttack(AbstractAttacker):
     def __init__(self, splitnn, epochs,
                  lr, alpha, epsilon,
-                 with_projection=True):
+                 with_projection=False):
         super().__init__(splitnn)
         self.epochs = epochs
         self.lr = lr
@@ -48,68 +17,55 @@ class IntermidiateLevelAttack(AbstractAttacker):
         self.epsilon = epsilon
         self.with_projection = with_projection
 
-        self.client = self.splitnn.client.client_model
+        self.client_model = splitnn.client.client_model
 
-    def attack(self, X, X_attack):
-
-        X = X.detach()
-        X_pert = torch.zeros(X.size())
-        X_pert.copy_(X).detach()
-        X_pert.requires_grad = True
-
-        mid_original = self.client(X)
-        mid_attack_original = self.client(X_attack)
+    def attack(self, original_data, adversarial_example):
+        original_data = original_data.detach()
+        new_adversarial_example = adversarial_example.clone()
+        mid_original_data = self.splitnn.client(original_data).detach()
+        delta_y_prime = self.client_model(adversarial_example).detach() - \
+            mid_original_data
 
         for _ in range(self.epochs):
-            mid_output = self.client(X_pert)
-            # generate adversarial example by max middle layer pertubation
-            # in the direction of increasing loss
+            new_adversarial_example = new_adversarial_example.detach()
+            new_adversarial_example.requires_grad = True
+            delta_y_doubleprime = self.client_model(
+                new_adversarial_example) - mid_original_data
+
             if self.with_projection:
-                loss = Proj_Loss()(
-                    mid_attack_original.detach(),
-                    mid_output, mid_original.detach(),
-                    self.alpha
-                )
+                pass
             else:
-                loss = Mid_layer_target_Loss()(
-                    mid_attack_original.detach(),
-                    mid_output, mid_original.detach(),
-                    self.alpha
-                )
-
+                loss = self.ila_flexible_loss(
+                    delta_y_prime, delta_y_doubleprime)
             loss.backward()
-            pert = self.lr * X_pert.grad.detach().sign()
 
-            # minimize loss
-            X_pert = X_pert.detach() + pert
-            X_pert.requires_grad = True
+            grad_new_adversarial_example_L = new_adversarial_example.grad.\
+                detach()
+            new_adversarial_example = new_adversarial_example.detach()
+            new_adversarial_example += self.lr * grad_new_adversarial_example_L
+            new_adversarial_example = self._clip_epsilon(
+                new_adversarial_example, original_data, self.epsilon) +\
+                original_data
+            new_adversarial_example = self._clip_image_range(
+                new_adversarial_example)
 
-            # make sure we don't modify the original image beyond epsilon
-            X_pert = self._clip_epsilon(X, X_pert, self.epsilon)
-            X_pert.requires_grad = True
+        return new_adversarial_example
 
-        return X_pert
+    def ila_flexible_loss(self, delta_y_prime, delta_y_doubleprime):
 
-    def ila_flexible_loss(self, old_attack_mid, new_mid, original_mid, coeff):
-        x = (old_attack_mid - original_mid).view(1, -1)
-        y = (new_mid - original_mid).view(1, -1)
+        delta_y_prime_norm = delta_y_prime.pow(2).sqrt().sum()
+        delta_y_doubleprime_norm = delta_y_doubleprime.pow(
+            2).sqrt().sum()
 
-        x_norm = x / x.norm()
-        if (y == 0).all():
-            y_norm = y
-        else:
-            y_norm = y / y.norm()
-        angle_loss = torch.mm(x_norm, y_norm.transpose(0, 1))
-        magnitude_gain = y.norm() / x.norm()
-        return angle_loss + magnitude_gain * coeff
+        loss = torch.mm((delta_y_doubleprime / delta_y_doubleprime_norm),
+                        (delta_y_prime / delta_y_prime_norm)
+                        .transpose(0, 1)) +\
+            self.alpha * (delta_y_doubleprime_norm / delta_y_prime_norm)
 
-    def proj_loss(self, old_attack_mid, new_mid, original_mid, coeff):
-        x = (old_attack_mid - original_mid).view(1, -1)
-        y = (new_mid - original_mid).view(1, -1)
-        x_norm = x / x.norm()
+        return loss
 
-        proj_loss = torch.mm(y, x_norm.transpose(0, 1)) / x.norm()
-        return proj_loss
+    def proj_loss(self):
+        pass
 
     def _clip_epsilon(self, x, y, epsilon):
         return (x.clone().detach() - y.clone().detach()).\
