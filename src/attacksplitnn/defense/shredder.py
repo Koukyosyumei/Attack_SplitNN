@@ -1,3 +1,5 @@
+import copy
+
 import numpy as np
 import scipy.stats as st
 import torch
@@ -57,3 +59,56 @@ class ShredderNoisyActivation(nn.Module):
             weight_sampled[sorted_sampled_weight_index]
         updated_weight = weight_flatten.reshape(self.activation_size)
         self.eval_weight = torch.Tensor(updated_weight)
+
+
+class Shredder:
+    def __init__(self, splitnn, intermidiate_shape,
+                 epoch, base_criterion,
+                 lam=1e3, c=1e3, dist_of_noise="norm"):
+        self.splitnn = splitnn
+        self.epoch = epoch
+        self.base_criterion = base_criterion
+        self.lam = lam
+        self.c = c
+
+        self.client = self.splitnn.client
+        self.model_noise = ShredderNoisyActivation(intermidiate_shape,
+                                                   dist_of_noise=dist_of_noise)
+
+    def fit(self, train_dataloader):
+        random_dataloader = copy.deepcopy(train_dataloader)
+
+        self.splitnn.eval()
+        self.model_noise.train()
+        for nitr in range(epoch):
+            for i, (data, data_rand) in enumerate(zip(train_dataloader,
+                                                      random_dataloader)):
+                x, y = data[0], data[1]
+                x_rand, y_rand = data_rand[0], data_rand[1]
+
+                with torch.no_grad():
+                    intermidiate = self.client.client_model(x)
+                    intermidiate_rand = self.client.client_model(x_rand)
+                    outputs = self.splitnn(x)
+
+                intermidiate = self.model_noise(intermidiate)
+                intermidiate_rand = self.model_noise(intermidiate_rand)
+
+                distance = (intermidiate_rand -
+                            intermidiate).square().sqrt().sum()
+
+                positive = (y == y_rand)
+                negative = (y != y_rand)
+
+                positive_distance = sum(torch.mul(positive, distance))
+                negative_distance = sum(torch.mul(negative, distance))
+
+                loss = self.base_criterion(outputs, y) +\
+                    self.lam*(positive_distance +
+                              (self.c - negative_distance))
+                loss.backward()
+
+                # TODO step, optimizer, etc...
+
+    def predict(self):
+        pass
