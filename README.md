@@ -69,10 +69,10 @@ can train SplitNN like the normal torch models.
 
 ## Defense
 
-|          | example                                                             |
-| -------- | ------------------------------------------------------------------- |
-| Max Norm | [notebook](examples/Label_Leakage.ipynb)                            |
-| NoPeek   | [notebook](examples/.ipynb_checkpoints/NoPeekLoss-checkpoint.ipynb) |
+|          | example                                          |
+| -------- | ------------------------------------------------ |
+| Max Norm | [notebook](examples/Label_Leakage.ipynb)         |
+| NoPeek   | [notebook](examples/NoPeekLoss-checkpoint.ipynb) |
 
 ## License
 
