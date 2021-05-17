@@ -37,9 +37,6 @@ class ShredderNoisyActivation(nn.Module):
         return input + self.train_noise
 
     def _forward_eval(self, input):
-        if self.dist_params_of_noise is None:
-            self._set_params_for_inference()
-
         return input + random.choice(self.eval_noise)
 
     def _initialize_noise_tensor(self):
@@ -47,7 +44,7 @@ class ShredderNoisyActivation(nn.Module):
             loc=self.loc, scale=self.scale, validate_args=None)
         self.train_noise = nn.Parameter(m.rsample(self.activation_size))
 
-    def _set_params_for_inference(self):
+    def sample_noise_tensor(self):
 
         # flatten the noise optimized during training
         np_train_noise = self.train_noise.clone().detach().numpy()
@@ -60,8 +57,8 @@ class ShredderNoisyActivation(nn.Module):
 
         # sample new noise from fitted distriution
         noise_sampled = self.dist_of_noise.rvs(
-            loc=self.dist_params_of_noise[-2],
-            scale=self.dist_params_of_noise[-1],
+            loc=self.dist_params_of_noise[0],
+            scale=self.dist_params_of_noise[1],
             size=np.prod(self.activation_size))
 
         # reorder and reshape the new noise
@@ -70,66 +67,89 @@ class ShredderNoisyActivation(nn.Module):
             noise_sampled[sorted_sampled_noise_index]
         updated_noise = noise_flatten.reshape(self.activation_size)
 
-        self.eval_noise.append(torch.Tensor(updated_noise))
+        self.eval_noise.append(nn.Parameter(torch.Tensor(updated_noise)))
+        # self.eval_noise.append(nn.Parameter(self.train_noise))
 
 
 class Shredder:
     def __init__(self, splitnn, intermidiate_shape,
                  epoch, base_criterion,
                  optimizer,
-                 lr=1e2,
+                 lr=1e-2,
                  num_of_distribution=1,
-                 alpha=0.01,
+                 alpha=-0.01,
+                 loc=0,
+                 scale=1.0,
                  dist_of_noise="laplace"):
 
-        self.splitnn = splitnn
         self.epoch = epoch
         self.base_criterion = base_criterion
         self.optimizer = optimizer
         self.lr = lr
         self.alpha = alpha
+        self.loc = loc
+        self.scale = scale
         self.intermidiate_shape = intermidiate_shape
         self.dist_of_noise = dist_of_noise
+        self.num_of_distribution = num_of_distribution
 
-        self.client = self.splitnn.client
+        self.server = splitnn.server
+        self.client = splitnn.client
         self.model_noise = ShredderNoisyActivation(intermidiate_shape,
+                                                   loc=loc,
+                                                   scale=scale,
                                                    dist_of_noise=dist_of_noise)
 
         self.sampled_noises = []
 
     def fit(self, train_dataloader):
 
-        self.splitnn.eval()
-        for _ in range(self.num_of_distribution):
+        self.server.server_model.eval()
+        self.client.client_model.eval()
+
+        for nd in range(self.num_of_distribution):
 
             temp_model_noise = ShredderNoisyActivation(
                 self.intermidiate_shape,
+                loc=self.loc,
+                scale=self.scale,
                 dist_of_noise=self.dist_of_noise
             )
             temp_optimizer = self.optimizer(
                 temp_model_noise.parameters(), lr=self.lr)
             temp_model_noise.train()
 
+            len_train_dataloader = len(train_dataloader.dataset)
+
             for nitr in range(self.epoch):
+                epoch_loss = 0
+
                 for i, data in enumerate(train_dataloader):
                     temp_optimizer.zero_grad()
                     x, y = data[0], data[1]
 
                     with torch.no_grad():
                         intermidiate = self.client.client_model(x)
-                        outputs = self.splitnn(x)
 
+                    intermidiate.requeires_grad = True
                     noised_intermidiate = temp_model_noise(intermidiate)
                     norm_noised_intermidiate = noised_intermidiate.norm()
 
+                    outputs = self.server.server_model(noised_intermidiate)
+
                     # basic shredder
                     base_loss = self.base_criterion(outputs, y)
-                    loss = base_loss + self.alpha * norm_noised_intermidiate
+                    loss = base_loss - self.alpha * norm_noised_intermidiate
 
                     # update the model_noise
                     loss.backward()
                     temp_optimizer.step()
 
+                    epoch_loss += loss.item() / len_train_dataloader
+
+                print(f"{nd} - {nitr} (distribution id, epoch): ", epoch_loss)
+
+            temp_model_noise.sample_noise_tensor()
             self.sampled_noises.append(temp_model_noise.eval_noise[0])
             del temp_model_noise
             del temp_optimizer
@@ -137,6 +157,7 @@ class Shredder:
         self.model_noise.eval_noise = self.sampled_noises
 
     def update_client(self):
-        self.client.client_model = nn.Seuquential(
+        self.model_noise.eval()
+        self.client.client_model = nn.Sequential(
             self.client.client_model, self.model_noise)
         return self.client
