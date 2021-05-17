@@ -49,16 +49,17 @@ class ShredderNoisyActivation(nn.Module):
         # flatten the noise optimized during training
         np_train_noise = self.train_noise.clone().detach().numpy()
         noise_flatten = np_train_noise.flatten()
+
         # get the order of noise elements
         self.sorted_noise_index = np.argsort(noise_flatten)
 
         # fit the noise to distriution
-        self.dist_params_of_noise = self.dist_of_noise.fit(np_train_noise)
+        self.dist_params_of_noise = self.dist_of_noise.fit(noise_flatten)
 
         # sample new noise from fitted distriution
         noise_sampled = self.dist_of_noise.rvs(
-            loc=self.dist_params_of_noise[0],
-            scale=self.dist_params_of_noise[1],
+            loc=self.dist_params_of_noise[-2],
+            scale=self.dist_params_of_noise[-1],
             size=np.prod(self.activation_size))
 
         # reorder and reshape the new noise
@@ -68,7 +69,6 @@ class ShredderNoisyActivation(nn.Module):
         updated_noise = noise_flatten.reshape(self.activation_size)
 
         self.eval_noise.append(nn.Parameter(torch.Tensor(updated_noise)))
-        # self.eval_noise.append(nn.Parameter(self.train_noise))
 
 
 class Shredder:
