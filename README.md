@@ -73,6 +73,7 @@ can train SplitNN like the normal torch models.
 | -------- | ---------------------------------------- |
 | Max Norm | [notebook](examples/Label_Leakage.ipynb) |
 | NoPeek   | [notebook](examples/NoPeekLoss.ipynb)    |
+| Shredder | [notebook](examples/Shredder.ipynb)      |
 
 ## License
 
