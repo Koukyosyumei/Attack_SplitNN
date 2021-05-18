@@ -1,6 +1,6 @@
 # Attacking SplitNN
 
-Attacking_SplitNN is a Python library, and it allows you to easily experiment with various combinations of attack and defense algorithms against SplitNN within PyTorch and scikit-learn.
+`Attacking_SplitNN` allows you to easily experiment with various combinations of attack and defense algorithms against SplitNN within PyTorch and scikit-learn.
 
 ## Install
 
@@ -58,6 +58,8 @@ can train SplitNN like the normal torch models.
                                                 torch.cat(epoch_outputs)))
 
 ## Attack
+
+`Attacking_SplitNN` offers several attack methods with the same interface.
 
 |                                  | type                        | example                                                |
 | -------------------------------- | --------------------------- | ------------------------------------------------------ |
