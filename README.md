@@ -61,21 +61,22 @@ can train SplitNN like the normal torch models.
 
 `Attacking_SplitNN` offers several attack methods with the same interface.
 
-|                                  | type                        | example                                                |
-| -------------------------------- | --------------------------- | ------------------------------------------------------ |
-| Intermidiate Level Attack        | evasion attack              | [notebook](examples/IntermidiateLevelAttack.ipynb)     |
-| Norm Attack                      | label leakage attack        | [notebook](examples/Label_Leakage.ipynb)               |
-| Transfer Inherit Attack          | membership inference attack | [notebook](examples/Membershio_Inference_Attack.ipynb) |
-| Black Box Model Inversion Attack | model inversion attack      | [notebook](examples/Black_Box_Model_Inversion.ipynb)   |
+|                                  | type                        | example                                                | Reference                                                                                                                                                                          |
+| -------------------------------- | --------------------------- | ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Intermidiate Level Attack        | evasion attack              | [notebook](examples/IntermidiateLevelAttack.ipynb)     | [original paper](https://openaccess.thecvf.com/content_ICCV_2019/papers/Huang_Enhancing_Adversarial_Example_Transferability_With_an_Intermediate_Level_Attack_ICCV_2019_paper.pdf) |
+| Norm Attack                      | label leakage attack        | [notebook](examples/Label_Leakage.ipynb)               | [original paper](https://arxiv.org/abs/2102.08504)                                                                                                                                 |
+| Transfer Inherit Attack          | membership inference attack | [notebook](examples/Membershio_Inference_Attack.ipynb) | [original paper](https://ieeexplore.ieee.org/document/9302683)                                                                                                                     |
+|                                  |
+| Black Box Model Inversion Attack | model inversion attack      | [notebook](examples/Black_Box_Model_Inversion.ipynb)   | [blog](https://blog.openmined.org/extracting-private-data-from-a-neural-network/)                                                                                                  |
 
 
 ## Defense
 
-|          | example                                  |
-| -------- | ---------------------------------------- |
-| Max Norm | [notebook](examples/Label_Leakage.ipynb) |
-| NoPeek   | [notebook](examples/NoPeekLoss.ipynb)    |
-| Shredder | [notebook](examples/Shredder.ipynb)      |
+|          | example                                  | Reference                                                            |
+| -------- | ---------------------------------------- | -------------------------------------------------------------------- |
+| Max Norm | [notebook](examples/Label_Leakage.ipynb) | [original paper](https://arxiv.org/abs/2102.08504)                   |
+| NoPeek   | [notebook](examples/NoPeekLoss.ipynb)    | [original paper](https://arxiv.org/abs/2008.09161)                   |
+| Shredder | [notebook](examples/Shredder.ipynb)      | [original paper](https://dl.acm.org/doi/pdf/10.1145/3373376.3378522) |
 
 ## License
 
