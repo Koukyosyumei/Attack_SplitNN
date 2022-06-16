@@ -18,7 +18,7 @@ setup(
     name='attacksplitnn',
     version='0.0.0',
     description='Attacking SplitNN',
-    author='Hideaki Takahashi',
+    author='Koukyosyumei',
     author_email='koukyosyumei@hotmail.com',
     license="MIT",
     install_requires=read_requirements(),
